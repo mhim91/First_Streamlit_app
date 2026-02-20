@@ -87,7 +87,10 @@ def velocity(vx,vy):
 def update_simulation():
     newtime = st.session_state.time + wait_time_input
     while st.session_state.time < newtime:
-        timestep = st.session_state.dx / velocity(st.session_state.vx, st.session_state.vy);
+        timestep = 0
+        if velocity(st.session_state.vx, st.session_state.vy) < 0.001:
+            timestep = 0.001
+        timestep = st.session_state.dt / velocity(st.session_state.vx, st.session_state.vy);
         st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy = step(st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy, timestep)
         st.session_state.x_list.append(st.session_state.x)
         st.session_state.y_list.append(st.session_state.y)
@@ -140,7 +143,7 @@ with col2:
         update_simulation()
         st.rerun()
 
-    boost_input = st.number_input('Boost ammount:', placeholder = 0)
+    boost_input = st.number_input('Delta-v boost:', placeholder = 0)
 
     if st.button("Boosta"):
         st.session_state.vx, st.session_state.vy = tangential_boost(st.session_state.vx, st.session_state.vy, boost_input)  
