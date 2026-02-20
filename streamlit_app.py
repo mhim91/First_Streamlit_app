@@ -152,21 +152,3 @@ with col2:
         st.session_state.clear()
             # Force a rerun to show the clean state
         st.rerun()
-
-st.write("")
-st.write('Inställningar (kan inte ändras i denna version)')
-
-st.number_input('Avståndssteglängd', value = st.session_state.dx, key = 'dx', step=1e-4, format="%.4f")
-st.number_input('Startvinkeln för planet', value = st.session_state.jupiter_phi, key = 'jupiter_phi')
-st.number_input('Startavståndet för planet', value = st.session_state.jupiter_distance, key = 'jupiter_distance')
-st.number_input('Startavståndet för satelit', value = st.session_state.x, key = 'x')
-st.number_input('Startfarten för satelit', value = st.session_state.vy, key = 'vy')
-st.number_input('Massan av solen M', value = st.session_state.M, key = 'M')
-st.number_input('Massan av planeten', value = st.session_state.jupiter_mass, key = 'jupiter_mass')
-st.number_input('Gravitationskonstanten G', value = st.session_state.G, key = 'G')
-
-
-
-
-    
-
