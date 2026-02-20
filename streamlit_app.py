@@ -27,6 +27,14 @@ if 'M' not in st.session_state:
     st.session_state.M = 1
 if 'dt' not in st.session_state:
     st.session_state.dt = 0.0001
+if 'dx' not in st.session_state:
+    st.session_state.dx = 0.002
+if 'jupiter_phi' not in st.session_state:
+    st.session_state.jupiter_phi = 0
+if 'jupiter_distance' not in st.session_state:
+    st.session_state.jupiter_distance = 5
+if 'jupiter_mass' not in st.session_state:
+    st.session_state.jupiter_mass = 0.01
 
 #functions
 
@@ -38,11 +46,18 @@ def Acc(x,y, x0 = 0, y0 = 0, M = st.session_state.M):
     k = st.session_state.G*M/(d**3)
     return np.array([-(x - x0)*k, -(y - y0)*k])
 
+def jupiter_coordinates(t):
+    phi = st.session_state.jupiter_phi + 2*np.pi*t/Period(st.session_state.jupiter_distance)
+    x = st.session_state.jupiter_distance * np.cos(phi)
+    y = st.session_state.jupiter_distance * np.sin(phi)
+    return x,y
+
 
 def step(x,y,vx, vy, dt):
-    #xm, ym = moon_coordinates(t)
+    xm, ym = jupiter_coordinates(st.session_state.time)
 
-    acc = Acc(x,y) #+ Acc(x,y, xm, ym, moon_M)
+    acc = Acc(x,y) + Acc(x,y, xm, ym, st.session_state.jupiter_mass)
+
     ax = acc[0]
     ay = acc[1]
 
@@ -72,16 +87,24 @@ def velocity(vx,vy):
 def update_simulation():
     newtime = st.session_state.time + wait_time_input
     while st.session_state.time < newtime:
-        st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy = step(st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy, st.session_state.dt)
+        timestep = st.session_state.dx / velocity(st.session_state.vx, st.session_state.vy);
+        st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy = step(st.session_state.x, st.session_state.y, st.session_state.vx, st.session_state.vy, timestep)
         st.session_state.x_list.append(st.session_state.x)
         st.session_state.y_list.append(st.session_state.y)
-        st.session_state.time += st.session_state.dt
+        st.session_state.time += timestep
     
 
 def return_figure():
     fig, ax = plt.subplots()
-    ax.plot(st.session_state.x_list[::1000], st.session_state.y_list[::1000], label = "bana")
+    ax.plot(st.session_state.x_list, st.session_state.y_list)
+    ax.plot(st.session_state.x, st.session_state.y, marker = 'o', label = "Satellit", color = 'black')
+    ax.plot(0, 0, marker = 'o', label = "Solen", color = 'orange')
+
+    xm, ym = jupiter_coordinates(st.session_state.time)
+    ax.plot(xm, ym, marker = 'o', label = "Planet", color = 'red')
+
     ax.set_aspect('equal', adjustable='box')
+    plt.legend(loc = 'upper right')
     ax.set_box_aspect(1)
     plt.grid(True)
     ax.set_xlim([-10, 10])
@@ -95,29 +118,55 @@ def return_figure():
 
 st.title("Hohmannbanor")
 
-# Example matplotlib plot (renders in Streamlit)
-st.pyplot(return_figure())
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.pyplot(return_figure())
+    # Example matplotlib plot (renders in Streamlit)
 
 
-st.write("Aktuellt tillstånd: x = ", st.session_state.x,
-         "y = ", st.session_state.y,
-         "vx = ", st.session_state.vx,
-         "vy = ", st.session_state.vy,
-         "v = ", velocity(st.session_state.vx, st.session_state.vy))
+    st.write("Aktuellt tillstånd: x = ", st.session_state.x,
+            "y = ", st.session_state.y,
+            "vx = ", st.session_state.vx,
+            "vy = ", st.session_state.vy,
+            "v = ", velocity(st.session_state.vx, st.session_state.vy))
+
+with col2:
+
+    wait_time_input = st.number_input('Väntetid', placeholder = 1)
+
+    if st.button("Vänta"):
+        update_simulation()
+        st.rerun()
+
+    boost_input = st.number_input('Boost ammount:', placeholder = 0)
+
+    if st.button("Boosta"):
+        st.session_state.vx, st.session_state.vy = tangential_boost(st.session_state.vx, st.session_state.vy, boost_input)  
+        st.pyplot(return_figure())
+        st.rerun()
+
+    if st.button("Reset", type="primary"):
+        # Clear all items in session state
+        st.session_state.clear()
+            # Force a rerun to show the clean state
+        st.rerun()
+
+st.write("")
+st.write('Inställningar (kan inte ändras i denna version)')
+
+st.number_input('Avståndssteglängd', value = st.session_state.dx, key = 'dx', step=1e-4, format="%.4f")
+st.number_input('Startvinkeln för planet', value = st.session_state.jupiter_phi, key = 'jupiter_phi')
+st.number_input('Startavståndet för planet', value = st.session_state.jupiter_distance, key = 'jupiter_distance')
+st.number_input('Startavståndet för satelit', value = st.session_state.x, key = 'x')
+st.number_input('Startfarten för satelit', value = st.session_state.vy, key = 'vy')
+st.number_input('Massan av solen M', value = st.session_state.M, key = 'M')
+st.number_input('Massan av planeten', value = st.session_state.jupiter_mass, key = 'jupiter_mass')
+st.number_input('Gravitationskonstanten G', value = st.session_state.G, key = 'G')
 
 
-boost_input = st.number_input('Boost ammount:', placeholder = 0)
-wait_time_input = st.number_input('Wait time', placeholder = 1)
-
-st.button("Reset", type="primary")
-
-if st.button("Implementera"):
-    update_simulation()
-    st.rerun()
-
-    st.write(st.session_state.time)
 
 
-
-
+    
 
