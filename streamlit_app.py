@@ -32,7 +32,7 @@ if 'dx' not in st.session_state:
 if 'jupiter_phi' not in st.session_state:
     st.session_state.jupiter_phi = 0
 if 'jupiter_distance' not in st.session_state:
-    st.session_state.jupiter_distance = 5
+    st.session_state.jupiter_distance = 4
 if 'jupiter_mass' not in st.session_state:
     st.session_state.jupiter_mass = 0.01
 
@@ -107,8 +107,8 @@ def return_figure():
     plt.legend(loc = 'upper right')
     ax.set_box_aspect(1)
     plt.grid(True)
-    ax.set_xlim([-10, 10])
-    ax.set_ylim([-10, 10])
+    ax.set_xlim([-8, 8])
+    ax.set_ylim([-8, 8])
     return fig
 
 
